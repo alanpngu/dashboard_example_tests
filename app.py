@@ -1,29 +1,48 @@
 import os
-
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from sodapy import Socrata
+import requests
+import chart_studio.dashboard_objs as dashboard
+import IPython.display
+from IPython.display import Image
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+my_dboard = dashboard.Dashboard()
+my_dboard.get_preview()
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-server = app.server
 
-app.layout = html.Div([
-    html.H2('Hello Worldzz'),
-    dcc.Dropdown(
-        id='dropdown',
-        options=[{'label': i, 'value': i} for i in ['LA', 'NYC', 'MTL']],
-        value='LA'
-    ),
-    html.Div(id='display-value')
-])
+client = Socrata("elumitas.demo.socrata.com", None, username = "alan.nguyen@elumitas.com", password = "Fairmont98!")
 
-@app.callback(dash.dependencies.Output('display-value', 'children'),
-              [dash.dependencies.Input('dropdown', 'value')])
-def display_value(value):
-    return 'You have selected "{}"'.format(value)
+df = client.get("ggtg-5evq", query = "select incident, count(incident) group by incident having count(incident) > 5")
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+for row in df:
+    print(row)
+
+
+
+
+#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+# app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+# server = app.server
+
+# app.layout = html.Div([
+#     html.H2('Hello Worldzz'),
+#     dcc.Dropdown(
+#         id='dropdown',
+#         options=[{'label': i, 'value': i} for i in ['LA', 'NYC', 'MTL']],
+#         value='LA'
+#     ),
+#     html.Div(id='display-value')
+# ])
+
+# @app.callback(dash.dependencies.Output('display-value', 'children'),
+#               [dash.dependencies.Input('dropdown', 'value')])
+# def display_value(value):
+#     return 'You have selected "{}"'.format(value)
+
+# if __name__ == '__main__':
+#     app.run_server(debug=True)
