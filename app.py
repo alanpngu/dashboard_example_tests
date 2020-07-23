@@ -28,7 +28,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 epoch = datetime.datetime.utcfromtimestamp(0)
 
-# server = app.server 
+server = app.server 
 
 colors = {
     'background': '#9f9f9f',
