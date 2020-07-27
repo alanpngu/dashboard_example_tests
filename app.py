@@ -16,6 +16,10 @@ import datetime
 import pytz
 #from pandas import DataFrame
 #testing    
+#import re
+#import itertools
+import json
+
 
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
@@ -150,6 +154,24 @@ date_fig = px.line(pddate, x='occurred_date_or', y='count_summarized_offense', t
 # fig3.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 # fig3.show()
 
+# tquery = "select count(summarized_offense), occurred_date_or group by occurred_date_or order by occurred_date_or"
+# mquery = "select summarized_offense, latitude, longitude"
+# init_time_data = client.get("nu46-gffg", query = tquery)
+# init_map_data = client.get("nu46-gffg", query = mquery)
+# init_time_df = pd.DataFrame(init_time_data)
+# init_map_df = pd.DataFrame(init_map_data)
+# init_map_df["latitude"] = pd.to_numeric(init_map_df["latitude"])
+# init_map_df["longitude"] = pd.to_numeric(init_map_df["longitude"])
+
+# init_time_fig = px.line(init_time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidents of All Crime Over Time")
+# init_time_fig.update_xaxes(
+#     rangeslider_visible=True,
+# )
+
+# init_map_fig = px.scatter_mapbox(init_map_df, lat=init_map_df.columns[1], lon=init_map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+# init_map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+# init_map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
 app.layout = html.Div(children=[
     html.H1(
         children='First Try at Dash',
@@ -159,34 +181,41 @@ app.layout = html.Div(children=[
         }
     ),
 
-    html.Div(children='Incident Counts Graph', style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
+    # html.Div(children='Incident Counts Graph', style={
+    #     'textAlign': 'center',
+    #     'color': colors['text']
+    # }),
 
-    dcc.Graph(
-        id='example-graph',
-        figure=fig
+    # dcc.Graph(
+    #     id='example-graph',
+    #     figure=fig
+    # ),
+
+    # html.H2("Change the query in the text box to see callbacks in action!"),
+    # html.Div(["Input: ",
+    #           dcc.Input(id='my-input', value='initial value', type='text')]),
+    # html.Br(),
+    # html.Div(id='my-output'),
+    # html.Div([
+    #     html.Div([
+    #         dcc.Dropdown(
+    #             id='xaxis-column',
+    #             options=[{'label': i, 'value': i} for i in columnlabels],
+    #             value='tilted'
+    #         )
+    #     ]),
+    # ]),
+    # html.Br(),
+    # html.Br(),
+    html.Div(
+        id ='query-mem',
+        style={'display': 'none'}
     ),
-
-    html.H2("Change the query in the text box to see callbacks in action!"),
-    html.Div(["Input: ",
-              dcc.Input(id='my-input', value='initial value', type='text')]),
-    html.Br(),
-    html.Div(id='my-output'),
-    html.Div([
-        html.Div([
-            dcc.Dropdown(
-                id='xaxis-column',
-                options=[{'label': i, 'value': i} for i in columnlabels],
-                value='tilted'
-            )
-        ]),
-    ]),
-
-    dcc.Graph(
-        id='tst-graph'
-    ),
+    # html.Br(),
+    
+    # dcc.Graph(
+    #     id='tst-graph'
+    # ),
 
     html.Br(),
     html.Div([
@@ -198,19 +227,21 @@ app.layout = html.Div(children=[
             )
         ]),
     ]),
-    html.Br(),
-    dcc.RangeSlider(
-        id = 'time-slider',
-        min = minDate,
-        max = maxDate,
-        value = [minDate, maxDate]
-        #visible = True
-    ),
+    # html.Br(),
+    # dcc.RangeSlider(
+    #     id = 'time-slider',
+    #     min = minDate,
+    #     max = maxDate,
+    #     value = [minDate, maxDate]
+    #     #visible = True
+    # ),
     html.Br(),
 
+    html.Button('Reset', id = 'resetbutton', n_clicks = 0),
 
     dcc.Graph(
         id='crime-map'
+        #figure = init_map_fig
     ),
 
     html.Br(),
@@ -226,15 +257,27 @@ app.layout = html.Div(children=[
     #     ]),
     # ]),
     dcc.Graph(
-        id = 'time-graph',
+        id = 'time-graph'
+        #figure = init_time_fig
         #figure = date_fig
     ),
-    html.Div(id='div')
+    # html.Div(id='div'),
+    # html.Div(id='display'),
+    # html.Br(),
+    # html.Div(id='filt'),
+    # html.Br(),
     # dcc.RangeSlider(
     #     id = 'time-slider'
     # ),
 
-   
+   #html.Div(id ="fix"),
+
+#    html.Div(
+#        id ='holder1'
+#    ),
+#    html.Div(
+#        id='holder2'
+#    )
 
 ])
 
@@ -269,123 +312,306 @@ app.layout = html.Div(children=[
 #     [Input('crime-opt','value')]
 # )
 # def update_crimemap(ctxt):
-#     if ctxt == 'All':
-#         actual_query = "select summarized_offense, latitude, longitude"
-#     else:
-#         actual_query = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "'"
-#     crime_df = client.get("nu46-gffg", query = actual_query)
-#     print(actual_query)
-#     pd_crime = pd.DataFrame(crime_df)
-#     # ctype = pd_crime.summarized_offense.unique()
-#     pd_crime["latitude"] = pd.to_numeric(pd_crime["latitude"])
-#     pd_crime["longitude"] = pd.to_numeric(pd_crime["longitude"])
-#     fig3 = px.scatter_mapbox(pd_crime, lat=pd_crime.columns[1], lon=pd_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)
-#     fig3.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
-#     fig3.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-#     return fig3
-
-@app.callback(
-    Output('time-graph', 'figure'),
-    #Output('crime-map', 'figure')],
-    [Input('crime-opt','value')]
-)
-def update_crimetime(ctxt):
-    if ctxt == 'All Crimes':
-        actual_query = "select count(summarized_offense), occurred_date_or group by occurred_date_or order by occurred_date_or"   
-    else:
-        actual_query = "select count(summarized_offense), occurred_date_or where summarized_offense like '" + ctxt + "' group by occurred_date_or order by occurred_date_or"
-    filt_date_df = client.get("nu46-gffg", query = actual_query)
-    #print(actual_query)
-    filt_date_crime = pd.DataFrame(filt_date_df)
-    # ctype = pd_crime.summarized_offense.unique()
-    filt_fig = px.line(filt_date_crime, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
-    filt_fig.update_xaxes(
-        rangeslider=dict(
-            visible = True
-        ),
-        rangeselector=dict(
-            buttons=list([
-                dict(count=1, label="1m", step="month", stepmode="backward"),
-                dict(count=6, label="6m", step="month", stepmode="backward"),
-                dict(count=1, label="YTD", step="year", stepmode="todate"),
-                dict(count=1, label="1y", step="year", stepmode="backward"),
-                dict(step="all")
-            ])
-        )
-    )
-    # timestamps = filt_fig.layout.xaxis.range
-    # print(timestamps)
-    return filt_fig
-    # timestamps = filt_fig.layout.xaxis.rangeslider.range
-    # print(timestamps)
-
-    # time1 = timestamps[0].isoformat()
-    # time2 = timestamps[1].isoformat()
-    # max_time_clause = " occurred_date_or > '" + time1 + "' "
-    # min_time_clause = " occurred_date_or < '" + time2 + "' " 
-
-    # if (ctxt == 'All Crimes'):
-    #     q2 = "select summarized_offense, latitude, longitude where" + min_time_clause + "AND" + max_time_clause
+    # if ctxt == 'All':
+    #     actual_query = "select summarized_offense, latitude, longitude"
     # else:
-    #     q2 = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "' AND" + min_time_clause + "AND" + max_time_clause 
+    #     actual_query = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "'"
+    # crime_df = client.get("nu46-gffg", query = actual_query)
+    # print(actual_query)
+    # pd_crime = pd.DataFrame(crime_df)
+    # # ctype = pd_crime.summarized_offense.unique()
+    # pd_crime["latitude"] = pd.to_numeric(pd_crime["latitude"])
+    # pd_crime["longitude"] = pd.to_numeric(pd_crime["longitude"])
+    # fig3 = px.scatter_mapbox(pd_crime, lat=pd_crime.columns[1], lon=pd_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)
+    # fig3.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+    # fig3.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    # return fig3
+
+
+# @app.callback(
+#     Output('time-graph', 'figure'),
+#     #Output('crime-map', 'figure')],
+#     [Input('crime-opt','value')]
+# )
+# def update_crimetime(ctxt):
+#     if ctxt == 'All Crimes':
+#         actual_query = "select count(summarized_offense), occurred_date_or group by occurred_date_or order by occurred_date_or"   
+#     else:
+#         actual_query = "select count(summarized_offense), occurred_date_or where summarized_offense like '" + ctxt + "' group by occurred_date_or order by occurred_date_or"
+#     filt_date_df = client.get("nu46-gffg", query = actual_query)
+#     filt_date_crime = pd.DataFrame(filt_date_df)
+#     filt_fig = px.line(filt_date_crime, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
+#     filt_fig.update_xaxes(
+#         rangeslider=dict(
+#             visible = True
+#         ),
+#         rangeselector=dict(
+#             buttons=list([
+#                 dict(count=1, label="1m", step="month", stepmode="backward"),
+#                 dict(count=6, label="6m", step="month", stepmode="backward"),
+#                 dict(count=1, label="YTD", step="year", stepmode="todate"),
+#                 dict(count=1, label="1y", step="year", stepmode="backward"),
+#                 dict(step="all")
+#             ])
+#         )
+#     )
+
+
+#     timestamps = filt_fig.layout.xaxis.range
+#     print(timestamps)
     
-    # print(q2)
-    # filt_df_q2 = client.get("nu46-gffg", query = q2)
-    # q2_crime = pd.DataFrame(filt_df_q2)
-    # q2_crime["latitude"] = pd.to_numeric(q2_crime["latitude"])
-    # q2_crime["longitude"] = pd.to_numeric(q2_crime["longitude"]) 
-    # q2_crime_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
-    # q2_crime_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
-    # q2_crime_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+    
+#     return filt_fig
 
-    # return filt_fig, q2_crime_fig
 
-#     pd_crime = pd.DataFrame(crime_df)
-#     # ctype = pd_crime.summarized_offense.unique()
-#     pd_crime["latitude"] = pd.to_numeric(pd_crime["latitude"])
-#     pd_crime["longitude"] = pd.to_numeric(pd_crime["longitude"])
 
+# @app.callback(
+#     Output('fix', 'children'),
+#     [Input('time-graph', 'relayoutData')
+# ])
+# def display_range(fig_data):
+#     t1 = "date"
+#     if fig_data is not None and 'xaxis.range' in fig_data:
+#         t1 = fig_data['xaxis.range'][0]
+#         t2 = fig_data['xaxis.range'][1]
+#         t1 = t1[0:10]
+#         t2 = t2[0:10]
+#         print(t1)
+#     print(t1)
+#     return t1
+
+
+# @app.callback(
+#     Output('crime-map', 'figure'),
+#     [Input('time-graph', 'relayoutData'),
+#     Input('crime-opt', 'value'),
+#     Input('crime-map', 'selectedData')
+#     ])
+# def display_range(fig_data, ctxt, sel_data): #pull q2 from a storage, and at the same time, save somethign to that storage? 
+# #maybe do a if query doesn't exist and if it does kidna thing
+#     if fig_data is not None and 'xaxis.range' in fig_data:
+#         t1 = fig_data['xaxis.range'][0]
+#         t2 = fig_data['xaxis.range'][1]
+#         t1 = t1[0:10]
+#         t2 = t2[0:10]
+#         print(t1)
+#         min_time_clause = " occurred_date_or >= '" + t1 + "' "
+#         max_time_clause = " occurred_date_or <= '" + t2 + "' "
+#         if (ctxt == 'All Crimes'):
+#             q2 = "select summarized_offense, latitude, longitude where" + min_time_clause + "AND" + max_time_clause
+#         else:
+#             q2 = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "' AND" + min_time_clause + "AND" + max_time_clause 
+#         #print(q2)
+#         filt_df_q2 = client.get("nu46-gffg", query = q2)
+#         q2_crime = pd.DataFrame(filt_df_q2)
+#         if (q2_crime["latitude"] is None): #trying to make it empty when nothing appears
+#             q2_crime_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+#             q2_crime_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+#             q2_crime_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+#         else: #need to make it so it only updates when person lets go
+#             q2_crime["latitude"] = pd.to_numeric(q2_crime["latitude"])
+#             q2_crime["longitude"] = pd.to_numeric(q2_crime["longitude"]) 
+#             q2_crime_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+#             q2_crime_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+#             q2_crime_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+#         if(sel_data):
+#         # if (sel_data is None):
+#         #     return q2_crime_fig
+#         # else:
+#             txt = sel_data['lassoPoints']['mapbox']
+#             lasso_q = "within_polygon(new_location, 'MULTIPOLYGON(((" 
+#             temp_zero = ""
+#             for i in range(len(txt)):
+#                 if (i == 0):
+#                     temp_zero = str(txt[i][0]) + " " + str(txt[i][1])
+#                     temp_str = temp_zero
+#                 else:
+#                     temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
+#                 lasso_q += temp_str
+#             lasso_q = lasso_q + ", " + temp_zero + ")))')"
+#             print("new_lasso")
+#             print(lasso_q)
+#             combo_q = q2 + " AND " + lasso_q
+#             print(combo_q)
+#             crime_combo = client.get("nu46-gffg", query = combo_q)
+#             combo_df = pd.DataFrame(crime_combo)
+#             combo_df["latitude"] = pd.to_numeric(combo_df["latitude"])
+#             combo_df["longitude"] = pd.to_numeric(combo_df["longitude"]) 
+#             combo_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+#             combo_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+#             combo_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+#             print("did we get here")
+#             return combo_fig
+#         else:
+#             return q2_crime_fig
+#             #initialtxt[1] = lasso_q       
+#         #return q2_crime_fig
+#     else: 
+#         return dash.no_update
+
+# #ORIGINAL END
+
+
+
+
+
+# @app.callback(Output('display','children'),[Input('crime-map','selectedData')])
+# def selectData(selectData):
+#     return str('Selecting points produces a nested dictionary: {}'.format(selectData))
+
+
+# @app.callback(Output('filt','children'),[Input('crime-map','selectedData')])
+# def selectData3(selectData):
+#     print(type(selectData['lassoPoints']['mapbox']))
+#     print(type(selectData['lassoPoints']['mapbox'][0]))
+#     txt = selectData['lassoPoints']['mapbox']
+#     print(txt)
+#     stringa = "within_polygon(new_location, 'MULTIPOLYGON((("
+#     temp_zero = ""
+#     for i in range(len(txt)):
+#         if (i == 0):
+# #            temp_str = str(txt[i][0]) + " " + str(txt[i][1])
+#             temp_zero = str(txt[i][0]) + " " + str(txt[i][1])
+#             temp_str = temp_zero
+#         else:
+#             temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
+#         print(temp_str)
+#         stringa += temp_str
+#     stringa = stringa + ", " + temp_zero + ")))')"
+#     print(stringa)
+        # print(type(txt[i][0]))
+        # print(str(txt[i][0]) + " " + str(txt[i][1]))
+    #USE ITER TOOLS https://stackoverflow.com/questions/716477/join-list-of-lists-in-python
+        #print((txt[i][1]))
+
+    #txt = str('{}').format(selectData['lassoPoints']['mapbox'][0])
+    #for ()
+    # for i in range(selectData['lassoPoints']['mapbox']):
+    #     print(selectData['lassoPoints']['mapbox'])
+    #print(selectData['lassoPoints']['mapbox'][0]) 
+
+
+    # return str('test: {}'.format(selectData['lassoPoints']['mapbox'][0]))
+   
+    #return str('Selecting points produces a nested dictionary: {}'.format(selectData['lassoPoints']))
+
+
+# @app.callback(
+#     Output('holder1', 'children'),
+#     [Input('query-mem', 'children')]
+# )
 
 @app.callback(
+    Output('query-mem', 'children'),
+    [Input('crime-opt', 'value'), 
+    Input('crime-map','selectedData'),
+    Input('time-graph', 'relayoutData'),
+    Input('resetbutton', 'n_clicks')]
+)
+def savingQuery(val, sel_data, relay_data, n_click):
+    initialtxt = [''] * 3
+    if (val != "All Crimes"):
+        crime_type = "summarized_offense like '" + val + "'"
+        initialtxt[0] = crime_type
+    if (sel_data is not None):
+        #print(type(selectData['lassoPoints']['mapbox']))
+        txt = sel_data['lassoPoints']['mapbox']
+        print(txt)
+        lasso_q = "within_polygon(new_location, 'MULTIPOLYGON((("
+        temp_zero = ""
+        for i in range(len(txt)):
+            if (i == 0):
+                temp_zero = str(txt[i][0]) + " " + str(txt[i][1])
+                temp_str = temp_zero
+            else:
+                temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
+            #print(temp_str)
+            lasso_q += temp_str
+        lasso_q = lasso_q + ", " + temp_zero + ")))')"
+        print(lasso_q)
+        initialtxt[1] = lasso_q
+    if (relay_data is not None and 'xaxis.range' in relay_data):
+        t1 = relay_data['xaxis.range'][0]
+        t2 = relay_data['xaxis.range'][1]
+        print(t1)
+        t1 = t1[0:10]
+        t2 = t2[0:10]
+        print(t1)
+        time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
+        initialtxt[2] = time_clause
+
+    if (n_click > 0):
+        initialtxt = [''] * 3
+    print (initialtxt[1])
+    return initialtxt
+
+@app.callback([
     Output('crime-map', 'figure'),
-    [Input('time-graph', 'relayoutData'),
-    Input('crime-opt', 'value')
-    ])
-def display_range(fig_data, ctxt):
-    if fig_data is not None and 'xaxis.range' in fig_data:
-        t1 = fig_data['xaxis.range'][0]
-        t2 = fig_data['xaxis.range'][1]
-        t1 = t1[0:16]
-        t2 = t2[0:16]
-        #print(type(t1))
-        time1 = datetime.datetime.strptime(t1, '%Y-%m-%d %H:%M')
-        time2 = datetime.datetime.strptime(t2, '%Y-%m-%d %H:%M')
-        time_set1 = time1.isoformat()
-        time_set2 = time2.isoformat()
-        #print(time_set1)
+    Output('time-graph', 'figure'),
+    Output('resetbutton', 'n_clicks')],
+    [Input('query-mem', 'children'),
+    Input('crime-opt', 'value')]
+)
+def pullQuery(qlist, ctxt):
     
-        min_time_clause = " occurred_date_or > '" + time_set1 + "' "
-        max_time_clause = " occurred_date_or < '" + time_set2 + "' "
-        if (ctxt == 'All Crimes'):
-            q2 = "select summarized_offense, latitude, longitude where" + min_time_clause + "AND" + max_time_clause
-        else:
-            q2 = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "' AND" + min_time_clause + "AND" + max_time_clause 
-        print(q2)
-        filt_df_q2 = client.get("nu46-gffg", query = q2)
-        q2_crime = pd.DataFrame(filt_df_q2)
-        if (q2_crime["latitude"] is None): #trying to make it empty when nothing appears
-            q2_crime_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
-            q2_crime_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
-            q2_crime_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-        else: #need to make it so it only updates when person lets go
-            q2_crime["latitude"] = pd.to_numeric(q2_crime["latitude"])
-            q2_crime["longitude"] = pd.to_numeric(q2_crime["longitude"]) 
-            q2_crime_fig = px.scatter_mapbox(q2_crime, lat=q2_crime.columns[1], lon=q2_crime.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
-            q2_crime_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
-            q2_crime_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-        return q2_crime_fig
+    timeline_query = "select count(summarized_offense), occurred_date_or" 
+    map_query = "select summarized_offense, latitude, longitude"
+    if (qlist[0] == '' and qlist[1] == '' and qlist[2] == ''):
+        timeline_query += " group by occurred_date_or order by occurred_date_or"
+        print(timeline_query)
+        map_data = client.get("nu46-gffg", query = map_query)
+        time_data = client.get("nu46-gffg", query = timeline_query)
+        map_df = pd.DataFrame(map_data)
+        time_df = pd.DataFrame(time_data)
+        time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
+        time_fig.update_xaxes(
+            rangeslider_visible=True,
+        )
+        map_df["latitude"] = pd.to_numeric(map_df["latitude"])
+        map_df["longitude"] = pd.to_numeric(map_df["longitude"])
+        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+        map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+        map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+        
+        return map_fig, time_fig, 0
+
+        # pass
     else:
-        return dash.no_update
+        timeline_query += " where "
+        map_query += " where "
+        seen_query = False
+        for i in range(len(qlist)):
+            if (qlist[i] != ''):
+                if (seen_query == False):
+                    timeline_query = timeline_query + qlist[i]
+                    map_query = map_query + qlist[i]
+                    seen_query = True
+                else:
+                    timeline_query = timeline_query + " AND " + qlist[i]
+                    map_query = map_query + " AND " + qlist[i]
+    
+    print(timeline_query)
+    print(map_query)
+    timeline_query += " group by occurred_date_or order by occurred_date_or"
+    print(timeline_query)
+
+    map_data = client.get("nu46-gffg", query = map_query)
+    time_data = client.get("nu46-gffg", query = timeline_query)
+    map_df = pd.DataFrame(map_data)
+    time_df = pd.DataFrame(time_data)
+    time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
+    time_fig.update_xaxes(
+        rangeslider_visible=True,
+    )
+    map_df["latitude"] = pd.to_numeric(map_df["latitude"])
+    map_df["longitude"] = pd.to_numeric(map_df["longitude"])
+    map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+    map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+    map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+    return map_fig, time_fig, 0
+
 
 
 # @app.callback(
@@ -519,7 +745,6 @@ def display_range(fig_data, ctxt):
 #     print(timestamp[0].isoformat())
 #     print(timestamp[1])
 #     return q1_crime_fig, q2_crime_fig
-
 
 
 
