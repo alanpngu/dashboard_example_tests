@@ -20,7 +20,7 @@ import pytz
 #import itertools
 import json
 
-#does this even work
+#does this even
 
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
@@ -516,7 +516,7 @@ def savingQuery(val, sel_data, relay_data):
     if (sel_data is not None):
         #print(type(selectData['lassoPoints']['mapbox']))
         txt = sel_data['lassoPoints']['mapbox']
-        print(txt)
+        #print(txt)
         lasso_q = "within_polygon(new_location, 'MULTIPOLYGON((("
         temp_zero = ""
         for i in range(len(txt)):
@@ -528,22 +528,30 @@ def savingQuery(val, sel_data, relay_data):
             #print(temp_str)
             lasso_q += temp_str
         lasso_q = lasso_q + ", " + temp_zero + ")))')"
-        print(lasso_q)
+        #print(lasso_q)
         initialtxt[1] = lasso_q
     if (relay_data is not None and 'xaxis.range' in relay_data):
         t1 = relay_data['xaxis.range'][0]
         t2 = relay_data['xaxis.range'][1]
-        print(t1)
+        #print(t1)
         t1 = t1[0:10]
         t2 = t2[0:10]
-        print(t1)
+        #print(t1)
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
     
     print (initialtxt[1])
     return initialtxt
 
-
+# @app.callback(
+#     Output('reset-save', 'children'),
+#     [Input('resetbutton', 'n_clicks')]
+# )
+# def saveReset(nclick):
+#     if (nclick > 0):
+#         return True
+#     else:
+#         return False
 @app.callback([
     Output('crime-map', 'figure'),
     Output('time-graph', 'figure')],
@@ -556,7 +564,7 @@ def pullQuery(qlist, ctxt):
     map_query = "select summarized_offense, latitude, longitude"
     if (qlist[0] == '' and qlist[1] == '' and qlist[2] == ''):
         timeline_query += " group by occurred_date_or order by occurred_date_or"
-        print(timeline_query)
+        #print(timeline_query)
         map_data = client.get("nu46-gffg", query = map_query)
         time_data = client.get("nu46-gffg", query = timeline_query)
         map_df = pd.DataFrame(map_data)
@@ -588,11 +596,12 @@ def pullQuery(qlist, ctxt):
                 else:
                     timeline_query = timeline_query + " AND " + qlist[i]
                     map_query = map_query + " AND " + qlist[i]
+            print(i)
     
-    print(timeline_query)
-    print(map_query)
+    #print(timeline_query)
+    #print(map_query)
     timeline_query += " group by occurred_date_or order by occurred_date_or"
-    print(timeline_query)
+    #print(timeline_query)
 
     map_data = client.get("nu46-gffg", query = map_query)
     time_data = client.get("nu46-gffg", query = timeline_query)
