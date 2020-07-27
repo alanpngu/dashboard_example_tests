@@ -20,8 +20,7 @@ import pytz
 #import itertools
 import json
 
-#pulls are weird yo
-
+#does this even work
 
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
