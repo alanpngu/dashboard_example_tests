@@ -505,10 +505,9 @@ app.layout = html.Div(children=[
     Output('query-mem', 'children'),
     [Input('crime-opt', 'value'), 
     Input('crime-map','selectedData'),
-    Input('time-graph', 'relayoutData'),
-    Input('resetbutton', 'n_clicks')]
+    Input('time-graph', 'relayoutData')]
 )
-def savingQuery(val, sel_data, relay_data, n_click):
+def savingQuery(val, sel_data, relay_data):
     initialtxt = [''] * 3
     if (val != "All Crimes"):
         crime_type = "summarized_offense like '" + val + "'"
@@ -539,16 +538,14 @@ def savingQuery(val, sel_data, relay_data, n_click):
         print(t1)
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
-
-    if (n_click > 0):
-        initialtxt = [''] * 3
+    
     print (initialtxt[1])
     return initialtxt
 
+
 @app.callback([
     Output('crime-map', 'figure'),
-    Output('time-graph', 'figure'),
-    Output('resetbutton', 'n_clicks')],
+    Output('time-graph', 'figure')],
     [Input('query-mem', 'children'),
     Input('crime-opt', 'value')]
 )
@@ -573,8 +570,8 @@ def pullQuery(qlist, ctxt):
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
-        
-        return map_fig, time_fig, 0
+    
+        return map_fig, time_fig
 
         # pass
     else:
@@ -600,17 +597,61 @@ def pullQuery(qlist, ctxt):
     time_data = client.get("nu46-gffg", query = timeline_query)
     map_df = pd.DataFrame(map_data)
     time_df = pd.DataFrame(time_data)
-    time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
-    time_fig.update_xaxes(
-        rangeslider_visible=True,
-    )
-    map_df["latitude"] = pd.to_numeric(map_df["latitude"])
-    map_df["longitude"] = pd.to_numeric(map_df["longitude"])
-    map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
-    map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
-    map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
-    return map_fig, time_fig, 0
+    if (time_df.empty or map_df.empty):
+        return {
+            "layout": {
+                "xaxis": {
+                    "visible": False
+                },
+                "yaxis": {
+                    "visible": False
+                },
+                "annotations": [
+                    {
+                        "text": "No matching data found",
+                        "xref": "paper",
+                        "yref": "paper",
+                        "showarrow": False,
+                        "font": {
+                            "size": 28
+                        }
+                    }
+                ]
+            }
+        }, {
+            "layout": {
+                "xaxis": {
+                    "visible": False
+                },
+                "yaxis": {
+                    "visible": False
+                },
+                "annotations": [
+                    {
+                        "text": "No matching data found",
+                        "xref": "paper",
+                        "yref": "paper",
+                        "showarrow": False,
+                        "font": {
+                            "size": 28
+                        }
+                    }
+                ]
+            }
+        }
+    else:
+        time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
+        time_fig.update_xaxes(
+            rangeslider_visible=True,
+        )
+        map_df["latitude"] = pd.to_numeric(map_df["latitude"])
+        map_df["longitude"] = pd.to_numeric(map_df["longitude"])
+        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+        map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+        map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+    return map_fig, time_fig
 
 
 
