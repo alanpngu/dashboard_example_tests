@@ -99,12 +99,17 @@ app.layout = html.Div(children=[
 
     html.Br(),
     html.Br(),
-
+    
 
     dcc.Graph(
         id = 'time-graph'
     ),
-
+    html.Div(
+        id = 'workplease'
+    ),
+    html.Div(
+        id = 'testingagain'
+    )
 ])
 
 # @app.callback(
@@ -312,28 +317,53 @@ app.layout = html.Div(children=[
 #     Output('holder1', 'children'),
 #     [Input('query-mem', 'children')]
 # )
-
-
 # @app.callback(
-#     Output('printstuff','children'),
-#     [Input('time-graph', 'relayoutData')]
+#     Output('testingagain', 'children'),
+#     [Input('hist-graph', 'clickData')]
 # )
-# def printHehe(relay):
-#     # if (relay is not None and 'xaxis.range' in relay):
-#     #     t1 = relay['xaxis.range'][0]
-#     #     t2 = relay['xaxis.range'][1]
-#     #     print(t1)
-#     #     print(t2)
-#     #     # print(relay['xaxis.rangeslider.range'][0])
-#     #     #print(relay['xaxis.rangeslider.range'][1])
+# def testEvent(click):
+#     print(click)
+#     print(type(click))
+#     print(click['points'])
+#     print(type(click['points']))
+#     t2 = click['points'][0]['x']
+#     print(type(t2))
+#     print(t2)
 
-#     if (relay is not None and 'xaxis.rangeslider.range' in relay):
-#         t3 = relay['xaxis.rangeslider.range'][0]
-#         t4 = relay['xaxis.rangeslider.range'][1]
-#         print("selector")
-#         print(t3)
-#         print(t4)
-#     return "Printed"
+#     # t2 = click['points']['x']
+#     # print(t2t)
+#     return click
+
+@app.callback(
+    Output('workplease', 'children'),
+    [Input('printstuff', 'children')]
+)
+def spreeeee(dat):
+    print(dat)
+    if (dat == ''):
+        return 'hi'
+    return dat  
+
+@app.callback(
+    Output('printstuff','children'),
+    [Input('time-graph', 'relayoutData'),
+    Input('resetsave', 'children')]
+)
+def printHehe(relay, reset):
+    if (reset == True):
+        return ''
+    else:
+        if (relay is not None and 'xaxis.range' in relay):
+            t1 = relay['xaxis.range'][0]
+            t2 = relay['xaxis.range'][1]
+            t1 = t1[0:10]
+            t2 = t2[0:10]
+            time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
+            #print (time_clause)
+            return time_clause
+        else:
+            return dash.no_update
+    
 
         
 
@@ -344,13 +374,18 @@ app.layout = html.Div(children=[
     [Input('crime-opt', 'value'), 
     Input('crime-map','selectedData'),
     Input('time-graph', 'relayoutData'),
-    Input('resetsave', 'children')]
+    Input('resetsave', 'children'), 
+    Input('hist-graph', 'clickData')]
 )
-def savingQuery(val, sel_data, relay_data, reset):
+def savingQuery(val, sel_data, relay_data, reset, click_data):
     initialtxt = [''] * 3
+    #print(dat)
     if (val != "All Crimes"):
         crime_type = "summarized_offense like '" + val + "'"
         initialtxt[0] = crime_type
+    elif (click_data is not None and 'points' in click_data):
+        initialtxt[0] = "summarized_offense like '" + click_data['points'][0]['x'] + "'"
+
     if (sel_data is not None):
         txt = sel_data['lassoPoints']['mapbox']
         lasso_q = "within_polygon(new_location, 'MULTIPOLYGON((("
@@ -365,14 +400,20 @@ def savingQuery(val, sel_data, relay_data, reset):
         lasso_q = lasso_q + ", " + temp_zero + ")))')"
         initialtxt[1] = lasso_q
     if (relay_data is not None and 'xaxis.range' in relay_data):
-        for i in range(len(relay_data)):
-            print(i)
         t1 = relay_data['xaxis.range'][0]
         t2 = relay_data['xaxis.range'][1]
         t1 = t1[0:10]
         t2 = t2[0:10]
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
+
+
+    # if (dat != ''):
+    #     initialtxt[2] = dat
+    # print(initialtxt[2])
+    # if (tc is not None):
+    #     initialtxt[2] = tc
+
     if(reset == True):
         initialtxt[0] = ''
         initialtxt[1] = ''
