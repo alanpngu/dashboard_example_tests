@@ -118,7 +118,6 @@ app.layout = html.Div(children=[
 #         txt = "avg(airtemperature)"
 #     querz = "select stationname, " + txt + " group by stationname"
 #     qdf2 = client.get("xfbf-mi2s", query = querz)
-#     print(querz)
 #     qpdf2 = pd.DataFrame(qdf2)
 #     figa = px.bar(qpdf2, x = "stationname", y = qpdf2.columns[1], color = 'stationname', barmode = 'group')
     
@@ -134,7 +133,6 @@ app.layout = html.Div(children=[
     # else:
     #     actual_query = "select summarized_offense, latitude, longitude where summarized_offense like '" + ctxt + "'"
     # crime_df = client.get("nu46-gffg", query = actual_query)
-    # print(actual_query)
     # pd_crime = pd.DataFrame(crime_df)
     # # ctype = pd_crime.summarized_offense.unique()
     # pd_crime["latitude"] = pd.to_numeric(pd_crime["latitude"])
@@ -279,12 +277,9 @@ app.layout = html.Div(children=[
 
 # @app.callback(Output('filt','children'),[Input('crime-map','selectedData')])
 # def selectData3(selectData):
-#     print(type(selectData['lassoPoints']['mapbox']))
-#     print(type(selectData['lassoPoints']['mapbox'][0]))
+
 #     txt = selectData['lassoPoints']['mapbox']
-#     print(txt)
 #     stringa = "within_polygon(new_location, 'MULTIPOLYGON((("
-#     temp_zero = ""
 #     for i in range(len(txt)):
 #         if (i == 0):
 # #            temp_str = str(txt[i][0]) + " " + str(txt[i][1])
@@ -292,20 +287,11 @@ app.layout = html.Div(children=[
 #             temp_str = temp_zero
 #         else:
 #             temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
-#         print(temp_str)
 #         stringa += temp_str
 #     stringa = stringa + ", " + temp_zero + ")))')"
-#     print(stringa)
-        # print(type(txt[i][0]))
-        # print(str(txt[i][0]) + " " + str(txt[i][1]))
-    #USE ITER TOOLS https://stackoverflow.com/questions/716477/join-list-of-lists-in-python
-        #print((txt[i][1]))
 
     #txt = str('{}').format(selectData['lassoPoints']['mapbox'][0])
     #for ()
-    # for i in range(selectData['lassoPoints']['mapbox']):
-    #     print(selectData['lassoPoints']['mapbox'])
-    #print(selectData['lassoPoints']['mapbox'][0]) 
 
 
     # return str('test: {}'.format(selectData['lassoPoints']['mapbox'][0]))
