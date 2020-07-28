@@ -4,7 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from sodapy import Socrata
 import requests
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 import plotly.express as px
 import pandas as pd
@@ -68,7 +68,12 @@ app.layout = html.Div(children=[
         id ='query-mem',
         style={'display': 'none'}
     ),
-
+    html.Div(
+        id = 'resetsave'
+    ),
+    html.Div(
+        id = 'printstuff'
+    ),
     html.Br(),
     html.Div([
         html.Div([
@@ -82,8 +87,12 @@ app.layout = html.Div(children=[
 
     html.Br(),
 
-    html.Button('Reset', id = 'resetbutton', n_clicks = 0),
-
+    html.Button('Reset', id = 'resetbutton', n_clicks = 0, n_clicks_timestamp = 0),
+    html.Br(),
+    dcc.Graph(
+        id = 'hist-graph'
+    ),
+    html.Br(),
     dcc.Graph(
         id='crime-map'
     ),
@@ -304,13 +313,40 @@ app.layout = html.Div(children=[
 #     [Input('query-mem', 'children')]
 # )
 
+
+# @app.callback(
+#     Output('printstuff','children'),
+#     [Input('time-graph', 'relayoutData')]
+# )
+# def printHehe(relay):
+#     # if (relay is not None and 'xaxis.range' in relay):
+#     #     t1 = relay['xaxis.range'][0]
+#     #     t2 = relay['xaxis.range'][1]
+#     #     print(t1)
+#     #     print(t2)
+#     #     # print(relay['xaxis.rangeslider.range'][0])
+#     #     #print(relay['xaxis.rangeslider.range'][1])
+
+#     if (relay is not None and 'xaxis.rangeslider.range' in relay):
+#         t3 = relay['xaxis.rangeslider.range'][0]
+#         t4 = relay['xaxis.rangeslider.range'][1]
+#         print("selector")
+#         print(t3)
+#         print(t4)
+#     return "Printed"
+
+        
+
+
 @app.callback(
-    Output('query-mem', 'children'),
+    [Output('query-mem', 'children'),
+    Output('resetbutton', 'n_clicks')],
     [Input('crime-opt', 'value'), 
     Input('crime-map','selectedData'),
-    Input('time-graph', 'relayoutData')]
+    Input('time-graph', 'relayoutData'),
+    Input('resetsave', 'children')]
 )
-def savingQuery(val, sel_data, relay_data):
+def savingQuery(val, sel_data, relay_data, reset):
     initialtxt = [''] * 3
     if (val != "All Crimes"):
         crime_type = "summarized_offense like '" + val + "'"
@@ -329,20 +365,37 @@ def savingQuery(val, sel_data, relay_data):
         lasso_q = lasso_q + ", " + temp_zero + ")))')"
         initialtxt[1] = lasso_q
     if (relay_data is not None and 'xaxis.range' in relay_data):
+        for i in range(len(relay_data)):
+            print(i)
         t1 = relay_data['xaxis.range'][0]
         t2 = relay_data['xaxis.range'][1]
         t1 = t1[0:10]
         t2 = t2[0:10]
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
+    if(reset == True):
+        initialtxt[0] = ''
+        initialtxt[1] = ''
+        initialtxt[2] = ''
+        return initialtxt,0
 
-    return initialtxt
+    return initialtxt, 0
 
 
-
+@app.callback(
+    Output('crime-opt', 'value'),
+    [Input('resetsave', 'children')]
+)
+def resetDropdown(reset):
+    if (reset == True):
+        return "All Crimes"
+    else:
+        return dash.no_update
+    
 @app.callback([
     Output('crime-map', 'figure'),
-    Output('time-graph', 'figure')],
+    Output('time-graph', 'figure'),
+    Output('hist-graph', 'figure')],
     [Input('query-mem', 'children'),
     Input('crime-opt', 'value')]
 )
@@ -350,48 +403,68 @@ def pullQuery(qlist, ctxt):
     
     timeline_query = "select count(summarized_offense), occurred_date_or" 
     map_query = "select summarized_offense, latitude, longitude"
-    if (qlist[0] == '' and qlist[1] == '' and qlist[2] == ''):
+    hist_query = "select summarized_offense, count(summarized_offense) " 
+
+    if ((qlist[0] == '' and qlist[1] == '' and qlist[2] == '')):
         timeline_query += " group by occurred_date_or order by occurred_date_or"
+        hist_query += " group by summarized_offense having count(summarized_offense) > 0"
+
         map_data = client.get("nu46-gffg", query = map_query)
         time_data = client.get("nu46-gffg", query = timeline_query)
+        hist_data = client.get("nu46-gffg", query = hist_query)
+
         map_df = pd.DataFrame(map_data)
         time_df = pd.DataFrame(time_data)
+        hist_df = pd.DataFrame(hist_data)
+
         time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
         time_fig.update_xaxes(
             rangeslider_visible=True,
         )
+
         map_df["latitude"] = pd.to_numeric(map_df["latitude"])
         map_df["longitude"] = pd.to_numeric(map_df["longitude"])
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
-    
-        return map_fig, time_fig
+        hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
+            labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
+        hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])	
+        
+        return map_fig, time_fig, hist_fig
 
     else:
+    
         timeline_query += " where "
         map_query += " where "
+        hist_query += " where "
         seen_query = False
         for i in range(len(qlist)):
             if (qlist[i] != ''):
                 if (seen_query == False):
                     timeline_query = timeline_query + qlist[i]
                     map_query = map_query + qlist[i]
+                    hist_query = hist_query + qlist[i]
                     seen_query = True
                 else:
                     timeline_query = timeline_query + " AND " + qlist[i]
                     map_query = map_query + " AND " + qlist[i]
+                    hist_query = hist_query + " AND " + qlist[i]
     
-
+    print(hist_query)
     timeline_query += " group by occurred_date_or order by occurred_date_or"
-
+    hist_query += " group by summarized_offense having count(summarized_offense) > 0"
+    
     map_data = client.get("nu46-gffg", query = map_query)
     time_data = client.get("nu46-gffg", query = timeline_query)
+    hist_data = client.get("nu46-gffg", query = hist_query)    
+    
     map_df = pd.DataFrame(map_data)
     time_df = pd.DataFrame(time_data)
+    hist_df = pd.DataFrame(hist_data)
 
-    if (time_df.empty or map_df.empty):
+    if (time_df.empty or map_df.empty or hist_df.empty):
         return {
             "layout": {
                 "xaxis": {
@@ -432,7 +505,28 @@ def pullQuery(qlist, ctxt):
                     }
                 ]
             }
+        }, {
+            "layout": {
+                "xaxis": {
+                    "visible": False
+                },
+                "yaxis": {
+                    "visible": False
+                },
+                "annotations": [
+                    {
+                        "text": "No matching data found",
+                        "xref": "paper",
+                        "yref": "paper",
+                        "showarrow": False,
+                        "font": {
+                            "size": 28
+                        }
+                    }
+                ]
+            }
         }
+    
     else:
         time_fig = px.line(time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidencts of " + ctxt + " Over Time")
         time_fig.update_xaxes(
@@ -444,7 +538,25 @@ def pullQuery(qlist, ctxt):
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
-    return map_fig, time_fig
+        hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
+            labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
+        hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])
+    return map_fig, time_fig, hist_fig
+
+@app.callback(
+    Output('resetsave', 'children'),
+    [Input('resetbutton','n_clicks')]
+)
+def contextChecker(click):
+    ctx = dash.callback_context
+    if (click > 0):
+        if not ctx.triggered:
+            print("Not Pressed")
+            return False
+        else:
+            print("Pressed")
+            return True
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
