@@ -350,7 +350,6 @@ def savingQuery(val, sel_data, relay_data):
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
 
-    print (initialtxt[1])
     return initialtxt
 
 
@@ -397,7 +396,6 @@ def pullQuery(qlist, ctxt):
                 else:
                     timeline_query = timeline_query + " AND " + qlist[i]
                     map_query = map_query + " AND " + qlist[i]
-            print(i)
     
 
     timeline_query += " group by occurred_date_or order by occurred_date_or"
