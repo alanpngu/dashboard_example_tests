@@ -69,7 +69,6 @@ app.layout = html.Div(children=[
     ),
     html.Div(
         id = 'resetsave',
-        children = [False]
     ),
     html.Div(
         id = 'printstuff'
@@ -87,7 +86,7 @@ app.layout = html.Div(children=[
 
     html.Br(),
 
-    html.Button('Reset', id = 'resetbutton', n_clicks = 0, n_clicks_timestamp = 0),
+    html.Button('Reset', id = 'resetbutton', n_clicks = 1, n_clicks_timestamp = 0),
     html.Br(),
     dcc.Graph(
         id = 'hist-graph'
@@ -598,8 +597,7 @@ def contextChecker(click):
         else:
             #print("Pressed")
             return True
-    else:
-        return False
+
 
 
 if __name__ == '__main__':
