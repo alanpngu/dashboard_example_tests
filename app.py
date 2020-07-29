@@ -5,7 +5,6 @@ import dash_html_components as html
 from sodapy import Socrata
 import requests
 from dash.dependencies import Input, Output, State
-import dash_leaflet as dl
 
 
 import plotly.express as px
@@ -63,7 +62,7 @@ app.layout = html.Div(children=[
             'color': colors['text']
         }
     ),
-
+    
     html.Div(
         id ='query-mem',
         style={'display': 'none'}
@@ -456,6 +455,7 @@ def pullQuery(qlist, ctxt):
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+        map_fig.update_traces(marker=dict(opacity = 0.4))
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
             labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
@@ -567,7 +567,7 @@ def pullQuery(qlist, ctxt):
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-        #map_fig.update_traces(marker=dict(opacity = 0.7))
+        map_fig.update_traces(marker=dict(opacity = 0.4))
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
             labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
