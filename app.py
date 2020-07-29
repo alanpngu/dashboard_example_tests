@@ -68,7 +68,7 @@ app.layout = html.Div(children=[
         style={'display': 'none'}
     ),
     html.Div(
-        id = 'resetsave',
+        id = 'resetsave',   
     ),
     html.Div(
         id = 'printstuff'
@@ -326,8 +326,10 @@ app.layout = html.Div(children=[
 # def spreeeee(dat):
 #     print(dat)
 #     if (dat == ''):
-#         return 'hi'
+#         return ''
 #     return dat  
+
+
 
 # @app.callback(
 #     Output('printstuff','children'),
@@ -371,7 +373,6 @@ def savingQuery(val, sel_data, relay_data, reset, click_data):
     elif (click_data is not None and 'points' in click_data):
         initialtxt[0] = "summarized_offense like '" + click_data['points'][0]['x'] + "'"
 
-
     if (sel_data is not None):
         txt = sel_data['lassoPoints']['mapbox']
         lasso_q = "within_polygon(new_location, 'MULTIPOLYGON((("
@@ -384,15 +385,16 @@ def savingQuery(val, sel_data, relay_data, reset, click_data):
                 temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
             lasso_q += temp_str
         lasso_q = lasso_q + ", " + temp_zero + ")))')"
-        initialtxt[2] = lasso_q
+        initialtxt[1] = lasso_q
     if (relay_data is not None and 'xaxis.range' in relay_data):
         t1 = relay_data['xaxis.range'][0]
         t2 = relay_data['xaxis.range'][1]
         t1 = t1[0:10]
         t2 = t2[0:10]
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
-        initialtxt[1] = time_clause
-
+        initialtxt[2] = time_clause
+    # elif (wrk != ''):
+    #     initialtxt[2] = wrk
 
     # if (dat != ''):
     #     initialtxt[2] = dat
@@ -582,6 +584,17 @@ def clickReset(reset):
         return None
     else:
         return dash.no_update
+
+@app.callback(
+    Output('crime-map','selectedData'),
+    [Input('resetsave', 'children')]
+)
+def clickReset(reset):
+    if (reset == True):
+        return None
+    else:
+        return dash.no_update
+
 
 
 @app.callback(
