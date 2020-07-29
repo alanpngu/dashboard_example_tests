@@ -52,36 +52,6 @@ pd_crime = pd.DataFrame(crime_df)
 ctype = pd_crime.summarized_offense.unique()
 
 
-#clusterdf = client.get("nu46-gffg", query = "select summarized_offense, longitude, latitude limit 10000")
-#print(clusterdf)
-#lusterdfall = client.get_all("nu46-gffg", query = "select summarized_offense, longitude, latitude")
-#print(clusterdfall)
-# for item in clusterdfall:
-#     print(item)
-# pd_cluster = pd.DataFrame(clusterdf)
-# print(pd_cluster)
-# pd_cluster["latitude"] = pd.to_numeric(pd_cluster["latitude"])
-# pd_cluster["longitude"] = pd.to_numeric(pd_cluster["longitude"])
-# pd_cluster['combine'] = pd_cluster[['latitude', 'longitude']].values.tolist()
-# #print(type(pd_cluster))
-# cluster_list = pd_cluster.values.tolist()
-# #print((cluster_list))
-#print(pd_cluster)
-#markers = [dl.Marker(children=dl.Tooltip(item[0]), position=item[3]) for item in cluster_list]
-
-#cluster = dl.MarkerClusterGroup(id = "markers", children = markers, options={"polygonOptions": {"color": "red"}})
-# Get some example data (a list of dicts with {name: country name, latlng: position tuple, ...})
-# marker_data = requests.get("https://gist.githubusercontent.com/erdem/8c7d26765831d0f9a8c62f02782ae00d/raw"
-#                            "/248037cd701af0a4957cce340dabb0fd04e38f4c/countries.json").json()
-# # Create marker cluster.
-# markers = [dl.Marker(children=dl.Tooltip(item["name"]), position=item["latlng"]) for item in marker_data]
-# cluster = dl.MarkerClusterGroup(id="markers", children=markers, options={"polygonOptions": {"color": "red"}})
-# Create app.
-# app = dash.Dash()
-# app.layout = html.Div(dl.Map([dl.TileLayer(), cluster], zoom=3, center=(51, 10)),
-#                       style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"})
-
-
 
 
 
@@ -93,9 +63,7 @@ app.layout = html.Div(children=[
             'color': colors['text']
         }
     ),
-    # html.Div([
-    #     html.Div(dl.Map([dl.TileLayer(), cluster], zoom=3, center=(51, 10)),
-#                       style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"})
+
     html.Div(
         id ='query-mem',
         style={'display': 'none'}
