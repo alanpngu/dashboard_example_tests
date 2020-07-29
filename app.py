@@ -5,6 +5,8 @@ import dash_html_components as html
 from sodapy import Socrata
 import requests
 from dash.dependencies import Input, Output, State
+import dash_leaflet as dl
+
 
 import plotly.express as px
 import pandas as pd
@@ -50,6 +52,35 @@ pd_crime = pd.DataFrame(crime_df)
 ctype = pd_crime.summarized_offense.unique()
 
 
+#clusterdf = client.get("nu46-gffg", query = "select summarized_offense, longitude, latitude limit 10000")
+#print(clusterdf)
+#lusterdfall = client.get_all("nu46-gffg", query = "select summarized_offense, longitude, latitude")
+#print(clusterdfall)
+# for item in clusterdfall:
+#     print(item)
+# pd_cluster = pd.DataFrame(clusterdf)
+# print(pd_cluster)
+# pd_cluster["latitude"] = pd.to_numeric(pd_cluster["latitude"])
+# pd_cluster["longitude"] = pd.to_numeric(pd_cluster["longitude"])
+# pd_cluster['combine'] = pd_cluster[['latitude', 'longitude']].values.tolist()
+# #print(type(pd_cluster))
+# cluster_list = pd_cluster.values.tolist()
+# #print((cluster_list))
+#print(pd_cluster)
+#markers = [dl.Marker(children=dl.Tooltip(item[0]), position=item[3]) for item in cluster_list]
+
+#cluster = dl.MarkerClusterGroup(id = "markers", children = markers, options={"polygonOptions": {"color": "red"}})
+# Get some example data (a list of dicts with {name: country name, latlng: position tuple, ...})
+# marker_data = requests.get("https://gist.githubusercontent.com/erdem/8c7d26765831d0f9a8c62f02782ae00d/raw"
+#                            "/248037cd701af0a4957cce340dabb0fd04e38f4c/countries.json").json()
+# # Create marker cluster.
+# markers = [dl.Marker(children=dl.Tooltip(item["name"]), position=item["latlng"]) for item in marker_data]
+# cluster = dl.MarkerClusterGroup(id="markers", children=markers, options={"polygonOptions": {"color": "red"}})
+# Create app.
+# app = dash.Dash()
+# app.layout = html.Div(dl.Map([dl.TileLayer(), cluster], zoom=3, center=(51, 10)),
+#                       style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"})
+
 
 
 
@@ -62,8 +93,9 @@ app.layout = html.Div(children=[
             'color': colors['text']
         }
     ),
-
-
+    # html.Div([
+    #     html.Div(dl.Map([dl.TileLayer(), cluster], zoom=3, center=(51, 10)),
+#                       style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"})
     html.Div(
         id ='query-mem',
         style={'display': 'none'}
@@ -317,22 +349,7 @@ app.layout = html.Div(children=[
 #     Output('holder1', 'children'),
 #     [Input('query-mem', 'children')]
 # )
-# @app.callback(
-#     Output('testingagain', 'children'),
-#     [Input('hist-graph', 'clickData')]
-# )
-# def testEvent(click):
-#     print(click)
-#     print(type(click))
-#     print(click['points'])
-#     print(type(click['points']))
-#     t2 = click['points'][0]['x']
-#     print(type(t2))
-#     print(t2)
 
-#     # t2 = click['points']['x']
-#     # print(t2t)
-#     return click
 
 @app.callback(
     Output('workplease', 'children'),
@@ -386,6 +403,7 @@ def savingQuery(val, sel_data, relay_data, reset, click_data):
     elif (click_data is not None and 'points' in click_data):
         initialtxt[0] = "summarized_offense like '" + click_data['points'][0]['x'] + "'"
 
+
     if (sel_data is not None):
         txt = sel_data['lassoPoints']['mapbox']
         lasso_q = "within_polygon(new_location, 'MULTIPOLYGON((("
@@ -432,7 +450,7 @@ def resetDropdown(reset):
         return "All Crimes"
     else:
         return dash.no_update
-    
+
 @app.callback([
     Output('crime-map', 'figure'),
     Output('time-graph', 'figure'),
@@ -443,14 +461,16 @@ def resetDropdown(reset):
 def pullQuery(qlist, ctxt):
     
     timeline_query = "select count(summarized_offense), occurred_date_or" 
-    map_query = "select summarized_offense, latitude, longitude"
+    map_query = "select summarized_offense, latitude, longitude, occurred_date_or"
     hist_query = "select summarized_offense, count(summarized_offense) " 
 
     if ((qlist[0] == '' and qlist[1] == '' and qlist[2] == '')):
-        timeline_query += " group by occurred_date_or order by occurred_date_or"
-        hist_query += " group by summarized_offense having count(summarized_offense) > 0"
-
+        timeline_query += " group by occurred_date_or order by occurred_date_or limit 50000"
+        hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000"
+        map_query += " limit 50000"
         map_data = client.get("nu46-gffg", query = map_query)
+        #print(type(map_data))
+
         time_data = client.get("nu46-gffg", query = timeline_query)
         hist_data = client.get("nu46-gffg", query = hist_query)
 
@@ -465,7 +485,7 @@ def pullQuery(qlist, ctxt):
 
         map_df["latitude"] = pd.to_numeric(map_df["latitude"])
         map_df["longitude"] = pd.to_numeric(map_df["longitude"])
-        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
@@ -494,9 +514,10 @@ def pullQuery(qlist, ctxt):
                     hist_query = hist_query + " AND " + qlist[i]
     
     print(hist_query)
-    timeline_query += " group by occurred_date_or order by occurred_date_or"
-    hist_query += " group by summarized_offense having count(summarized_offense) > 0"
-    
+    print(map_query)
+    timeline_query += " group by occurred_date_or order by occurred_date_or limit 50000"
+    hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000" 
+    map_query += " limit 50000"
     map_data = client.get("nu46-gffg", query = map_query)
     time_data = client.get("nu46-gffg", query = timeline_query)
     hist_data = client.get("nu46-gffg", query = hist_query)    
@@ -575,14 +596,26 @@ def pullQuery(qlist, ctxt):
         )
         map_df["latitude"] = pd.to_numeric(map_df["latitude"])
         map_df["longitude"] = pd.to_numeric(map_df["longitude"])
-        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+        map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+        #map_fig.update_traces(marker=dict(opacity = 0.7))
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
             labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
         hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])
     return map_fig, time_fig, hist_fig
+
+@app.callback(
+    Output('hist-graph', 'clickData'),
+    [Input('resetsave', 'children')]
+)
+def clickReset(reset):
+    if (reset == True):
+        return None
+    else:
+        return dash.no_update
+
 
 @app.callback(
     Output('resetsave', 'children'),
