@@ -317,36 +317,37 @@ app.layout = html.Div(children=[
 #     [Input('query-mem', 'children')]
 # )
 
+#Still looking for a workaround for zoom..,
 
-@app.callback(
-    Output('workplease', 'children'),
-    [Input('printstuff', 'children')]
-)
-def spreeeee(dat):
-    print(dat)
-    if (dat == ''):
-        return 'hi'
-    return dat  
+# @app.callback(
+#     Output('workplease', 'children'),
+#     [Input('printstuff', 'children')]
+# )
+# def spreeeee(dat):
+#     print(dat)
+#     if (dat == ''):
+#         return 'hi'
+#     return dat  
 
-@app.callback(
-    Output('printstuff','children'),
-    [Input('time-graph', 'relayoutData'),
-    Input('resetsave', 'children')]
-)
-def printHehe(relay, reset):
-    if (reset == True):
-        return ''
-    else:
-        if (relay is not None and 'xaxis.range' in relay):
-            t1 = relay['xaxis.range'][0]
-            t2 = relay['xaxis.range'][1]
-            t1 = t1[0:10]
-            t2 = t2[0:10]
-            time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
-            #print (time_clause)
-            return time_clause
-        else:
-            return dash.no_update
+# @app.callback(
+#     Output('printstuff','children'),
+#     [Input('time-graph', 'relayoutData'),
+#     Input('resetsave', 'children')]
+# )
+# def printHehe(relay, reset):
+#     if (reset == True):
+#         return ''
+#     else:
+#         if (relay is not None and 'xaxis.range' in relay):
+#             t1 = relay['xaxis.range'][0]
+#             t2 = relay['xaxis.range'][1]
+#             t1 = t1[0:10]
+#             t2 = t2[0:10]
+#             time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
+#             #print (time_clause)
+#             return time_clause
+#         else:
+#             return dash.no_update
     
 
         
@@ -383,14 +384,14 @@ def savingQuery(val, sel_data, relay_data, reset, click_data):
                 temp_str = "," + str(txt[i][0]) + " " + str(txt[i][1])
             lasso_q += temp_str
         lasso_q = lasso_q + ", " + temp_zero + ")))')"
-        initialtxt[1] = lasso_q
+        initialtxt[2] = lasso_q
     if (relay_data is not None and 'xaxis.range' in relay_data):
         t1 = relay_data['xaxis.range'][0]
         t2 = relay_data['xaxis.range'][1]
         t1 = t1[0:10]
         t2 = t2[0:10]
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
-        initialtxt[2] = time_clause
+        initialtxt[1] = time_clause
 
 
     # if (dat != ''):
@@ -436,7 +437,6 @@ def pullQuery(qlist, ctxt):
         hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000"
         map_query += " limit 50000"
         map_data = client.get("nu46-gffg", query = map_query)
-        #print(type(map_data))
 
         time_data = client.get("nu46-gffg", query = timeline_query)
         hist_data = client.get("nu46-gffg", query = hist_query)
@@ -481,8 +481,7 @@ def pullQuery(qlist, ctxt):
                     map_query = map_query + " AND " + qlist[i]
                     hist_query = hist_query + " AND " + qlist[i]
     
-    print(hist_query)
-    print(map_query)
+
     timeline_query += " group by occurred_date_or order by occurred_date_or limit 50000"
     hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000" 
     map_query += " limit 50000"
@@ -593,10 +592,10 @@ def contextChecker(click):
     ctx = dash.callback_context
     if (click > 0):
         if not ctx.triggered:
-            print("Not Pressed")
+            #print("Not Pressed")
             return False
         else:
-            print("Pressed")
+            #print("Pressed")
             return True
 
 
