@@ -68,7 +68,8 @@ app.layout = html.Div(children=[
         style={'display': 'none'}
     ),
     html.Div(
-        id = 'resetsave'
+        id = 'resetsave',
+        children = [False]
     ),
     html.Div(
         id = 'printstuff'
