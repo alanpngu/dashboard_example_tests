@@ -597,6 +597,8 @@ def contextChecker(click):
         else:
             #print("Pressed")
             return True
+    else:
+        return False
 
 
 if __name__ == '__main__':
