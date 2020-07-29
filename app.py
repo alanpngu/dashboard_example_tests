@@ -56,7 +56,7 @@ ctype = pd_crime.summarized_offense.unique()
 
 app.layout = html.Div(children=[
     html.H1(
-        children='First Try at Dash',
+        children='Seattle Police Demo',
         style={
             'textAlign': 'center',
             'color': colors['text']
