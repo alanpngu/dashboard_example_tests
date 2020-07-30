@@ -51,7 +51,40 @@ pd_crime = pd.DataFrame(crime_df)
 ctype = pd_crime.summarized_offense.unique()
 
 
+# og_timeline_query = "select count(summarized_offense), occurred_date_or" 
+# og_map_query = "select summarized_offense, latitude, longitude, occurred_date_or"
+# og_hist_query = "select summarized_offense, count(summarized_offense) " 
 
+
+# og_timeline_query += " group by occurred_date_or order by occurred_date_or limit 50000"
+# og_hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000"
+# og_map_query += " limit 50000"
+
+# og_map_data = client.get("nu46-gffg", query = og_map_query)
+# og_time_data = client.get("nu46-gffg", query = og_timeline_query)
+# og_hist_data = client.get("nu46-gffg", query = og_hist_query)
+
+# og_map_df = pd.DataFrame(og_map_data)
+# og_time_df = pd.DataFrame(og_time_data)
+# og_hist_df = pd.DataFrame(og_hist_data)
+
+# og_time_fig = px.line(og_time_df, x='occurred_date_or', y='count_summarized_offense', title= "Incidents of Crime Over Time")
+# og_time_fig.update_xaxes(
+#     rangeslider_visible=True,
+# )
+
+
+# og_map_df["latitude"] = pd.to_numeric(og_map_df["latitude"])
+# og_map_df["longitude"] = pd.to_numeric(og_map_df["longitude"])
+# og_map_fig = px.scatter_mapbox(og_map_df, lat=og_map_df.columns[1], lon=og_map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
+# og_map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
+# og_map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+# og_map_fig.update_traces(marker=dict(opacity = 0.8))
+# og_map_fig.update_layout(uirevision = True)
+
+# og_hist_fig = px.histogram(og_hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
+#     labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
+# og_hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])	
 
 
 app.layout = html.Div(children=[
@@ -102,12 +135,20 @@ app.layout = html.Div(children=[
 
     dcc.Graph(
         id = 'time-graph'
+        #figure = og_time_fig
     ),
     html.Div(
         id = 'workplease'
     ),
     html.Div(
         id = 'testingagain'
+    ),
+    dcc.Store(
+        id = 'holder',
+
+    ),
+    html.Div(
+        id = 'placeholdtwo'
     )
 ])
 
@@ -427,9 +468,10 @@ def resetDropdown(reset):
     Output('hist-graph', 'figure')],
     [Input('query-mem', 'children'),
     Input('crime-opt', 'value'), 
-    Input('resetsave', 'children')]
+    Input('resetsave', 'children')],
+    [State('placeholdtwo', 'children')]
 )
-def pullQuery(qlist, ctxt, reset):
+def pullQuery(qlist, ctxt, reset, p):
 
     # if (reset):
     #     saves = False
@@ -438,8 +480,12 @@ def pullQuery(qlist, ctxt, reset):
     timeline_query = "select count(summarized_offense), occurred_date_or" 
     map_query = "select summarized_offense, latitude, longitude, occurred_date_or"
     hist_query = "select summarized_offense, count(summarized_offense) " 
-
-
+    #og_map_fig.update_layout(uirevision = "Saved")	
+    # if (dat['saved'] is None):
+    #     savior = "Testing"
+    # else:
+    #     savior = str(dat['saved'])
+    savez = str(p)
     if ((qlist[0] == '' and qlist[1] == '' and qlist[2] == '')):
         timeline_query += " group by occurred_date_or order by occurred_date_or limit 50000"
         hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000"
@@ -467,20 +513,16 @@ def pullQuery(qlist, ctxt, reset):
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-        map_fig.update_traces(marker=dict(opacity = 0.6))
+        map_fig.update_traces(marker=dict(opacity = 0.8))
         
-        if (reset == True):
-            map_fig.update_layout(uirevision = None)
-        else:
-            map_fig.update_layout(uirevision = True)
+        map_fig.update_layout(uirevision = p)
 
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
             labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
-        hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])	
-        
-        return map_fig, time_fig, hist_fig
+        hist_fig.update_layout( plot_bgcolor=colors['background'], paper_bgcolor=colors['background'], font_color=colors['text'])
 
+        return map_fig, time_fig, hist_fig
     else:
     
         timeline_query += " where "
@@ -590,10 +632,10 @@ def pullQuery(qlist, ctxt, reset):
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-        map_fig.update_traces(marker=dict(opacity = 0.6))
+        map_fig.update_traces(marker=dict(opacity = 0.8))
         #map_fig.update_layout(uirevision = "test"")
-        map_fig.update_layout(uirevision = True)
-        # map_fig.update_layout(uirevision = True)
+        map_fig.update_layout(uirevision = p)
+
 
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
@@ -621,34 +663,62 @@ def clickReset(reset):
     else:
         return dash.no_update
 
-
+# @app.callback(
+#     Output('placehold', 'children'),
+#     [Input('resetsave', 'children')],
+#     [State('crime-map', 'figure')]
+# )
+# def fixIt(reset, crime):
+#     if (reset == True):
+#         if (crime['layout']['uirevision'] == True):
+#             crime ['layout']['uirevision'] = False
+#     return "PlaceHolder"
 
 @app.callback(
     Output('crime-map','selectedData'),
     [Input('resetsave', 'children')]
+   #[State('placeholdtwo', 'children')]
 )
 def clickReset(reset):
+
     if (reset == True):
         return None
     else:
         return dash.no_update
 
-
+@app.callback(
+    Output('placeholdtwo', 'children'),
+    [Input('holder','data')]
+)
+def counter(dat):
+    return dat['saved']
 
 
 @app.callback(
-    Output('resetsave', 'children'),
-    [Input('resetbutton','n_clicks')]
+    [Output('resetsave', 'children'),
+    Output('holder', 'data')],
+    [Input('resetbutton','n_clicks')],
+    [State('holder', 'data')]
+    #[State('holder', 'data')]
 )
-def contextChecker(click):
+def contextChecker(click, dat):
     ctx = dash.callback_context
+    dat = dat or {'saved': 0}
+    #dat = dat or {'saved': 0}
+
+
     if (click > 0):
         if not ctx.triggered:
             #print("Not Pressed")
-            return False
+            #crime['layout']['uirevision'] = True
+            return False, dat
         else:
             #print("Pressed")
-            return True
+            #crime['layout']['uirevision'] = False
+            dat['saved'] = dat['saved'] + 1
+            return True, {'saved': dat.get('saved', 0) + 1}
+    else:
+        return False, dat
 
 
 
