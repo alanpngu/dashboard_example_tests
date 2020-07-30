@@ -319,37 +319,37 @@ app.layout = html.Div(children=[
 
 #Still looking for a workaround for zoom..,
 
-@app.callback(
-    Output('workplease', 'children'),
-    [Input('printstuff', 'children')]
-)
-def spreeeee(dat):
-    print(dat)
-    if (dat == '' or None):
-        return ''
-    return dat  
+# @app.callback(
+#     Output('workplease', 'children'),
+#     [Input('printstuff', 'children')]
+# )
+# def spreeeee(dat):
+#     print(dat)
+#     if (dat == '' or None):
+#         return ''
+#     return dat  
 
 
 
-@app.callback(
-    Output('printstuff','children'),
-    [Input('time-graph', 'relayoutData'),
-    Input('resetsave', 'children')]
-)
-def printHehe(relay, reset):
-    if (reset == True):
-        return None
-    else:
-        if (relay is not None and 'xaxis.range' in relay):
-            t1 = relay['xaxis.range'][0]
-            t2 = relay['xaxis.range'][1]
-            t1 = t1[0:10]
-            t2 = t2[0:10]
-            time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
-            #print (time_clause)
-            return time_clause
-        else:
-            return dash.no_update
+# @app.callback(
+#     Output('printstuff','children'),
+#     [Input('time-graph', 'relayoutData'),
+#     Input('resetsave', 'children')]
+# )
+# def printHehe(relay, reset):
+#     if (reset == True):
+#         return None
+#     else:
+#         if (relay is not None and 'xaxis.range' in relay):
+#             t1 = relay['xaxis.range'][0]
+#             t2 = relay['xaxis.range'][1]
+#             t1 = t1[0:10]
+#             t2 = t2[0:10]
+#             time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
+#             #print (time_clause)
+#             return time_clause
+#         else:
+#             return dash.no_update
     
 
         
@@ -430,7 +430,11 @@ def resetDropdown(reset):
     Input('resetsave', 'children')]
 )
 def pullQuery(qlist, ctxt, reset):
-    
+
+    # if (reset):
+    #     saves = False
+    # else:
+    #     saves = True
     timeline_query = "select count(summarized_offense), occurred_date_or" 
     map_query = "select summarized_offense, latitude, longitude, occurred_date_or"
     hist_query = "select summarized_offense, count(summarized_offense) " 
@@ -441,7 +445,7 @@ def pullQuery(qlist, ctxt, reset):
         hist_query += " group by summarized_offense having count(summarized_offense) > 0 limit 50000"
         map_query += " limit 50000"
         map_data = client.get("nu46-gffg", query = map_query)
-
+        print (map_query)
         time_data = client.get("nu46-gffg", query = timeline_query)
         hist_data = client.get("nu46-gffg", query = hist_query)
 
@@ -464,11 +468,12 @@ def pullQuery(qlist, ctxt, reset):
         map_fig.update_layout(mapbox_style="dark", mapbox_accesstoken="pk.eyJ1IjoiYWxhbndpbjk4IiwiYSI6ImNrY3d5OGNuaTA0bTgzMHFpamV5NzB6aTAifQ.u1TcuBVkdfy8FVCmzBB3Cw")
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
         map_fig.update_traces(marker=dict(opacity = 0.6))
-
+        
         if (reset == True):
-            map_fig.update_layout(uirevision = False)
+            map_fig.update_layout(uirevision = None)
         else:
             map_fig.update_layout(uirevision = True)
+
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
             labels = {'summarized_offense': 'Incident Type', 'count_summarized_offense': 'Number of Incidents'})	
@@ -587,8 +592,8 @@ def pullQuery(qlist, ctxt, reset):
         map_fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
         map_fig.update_traces(marker=dict(opacity = 0.6))
         #map_fig.update_layout(uirevision = "test"")
-        #map_fig.update_layout(uirevision = True)
         map_fig.update_layout(uirevision = True)
+        # map_fig.update_layout(uirevision = True)
 
 
         hist_fig = px.histogram(hist_df, x= "summarized_offense", y="count_summarized_offense", color="summarized_offense",	
@@ -607,6 +612,18 @@ def clickReset(reset):
         return dash.no_update
 
 @app.callback(
+    Output('time-graph', 'relayoutData'),
+    [Input('resetsave', 'children')]
+)
+def clickReset(reset):
+    if (reset == True):
+        return None
+    else:
+        return dash.no_update
+
+
+
+@app.callback(
     Output('crime-map','selectedData'),
     [Input('resetsave', 'children')]
 )
@@ -615,6 +632,7 @@ def clickReset(reset):
         return None
     else:
         return dash.no_update
+
 
 
 
