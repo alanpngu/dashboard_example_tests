@@ -103,9 +103,6 @@ app.layout = html.Div(children=[
     html.Div(
         id = 'resetsave',   
     ),
-    html.Div(
-        id = 'printstuff'
-    ),
     html.Br(),
     html.Div([
         html.Div([
@@ -138,9 +135,6 @@ app.layout = html.Div(children=[
         #figure = og_time_fig
     ),
     html.Div(
-        id = 'workplease'
-    ),
-    html.Div(
         id = 'testingagain'
     ),
     dcc.Store(
@@ -149,7 +143,13 @@ app.layout = html.Div(children=[
     ),
     html.Div(
         id = 'placeholdtwo'
-    )
+    ),
+    html.Div(
+        id = 'printstuff'
+    ),
+    html.Div(
+        id = 'workplease'
+    ),
 ])
 
 # @app.callback(
@@ -360,37 +360,37 @@ app.layout = html.Div(children=[
 
 #Still looking for a workaround for zoom..,
 
-# @app.callback(
-#     Output('workplease', 'children'),
-#     [Input('printstuff', 'children')]
-# )
-# def spreeeee(dat):
-#     print(dat)
-#     if (dat == '' or None):
-#         return ''
-#     return dat  
+@app.callback(
+    Output('workplease', 'children'),
+    [Input('printstuff', 'children')]
+)
+def spreeeee(dat):
+    print(dat)
+    if (dat == '' or None):
+        return ''
+    return dat  
 
 
 
-# @app.callback(
-#     Output('printstuff','children'),
-#     [Input('time-graph', 'relayoutData'),
-#     Input('resetsave', 'children')]
-# )
-# def printHehe(relay, reset):
-#     if (reset == True):
-#         return None
-#     else:
-#         if (relay is not None and 'xaxis.range' in relay):
-#             t1 = relay['xaxis.range'][0]
-#             t2 = relay['xaxis.range'][1]
-#             t1 = t1[0:10]
-#             t2 = t2[0:10]
-#             time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
-#             #print (time_clause)
-#             return time_clause
-#         else:
-#             return dash.no_update
+@app.callback(
+    Output('printstuff','children'),
+    [Input('time-graph', 'relayoutData'),
+    Input('resetsave', 'children')]
+)
+def printHehe(relay, reset):
+    if (reset == True):
+        return None
+    else:
+        if (relay is not None and 'xaxis.range' in relay):
+            t1 = relay['xaxis.range'][0]
+            t2 = relay['xaxis.range'][1]
+            t1 = t1[0:10]
+            t2 = t2[0:10]
+            time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
+            #print (time_clause)
+            return time_clause
+        else:
+            return dash.no_update
     
 
         
@@ -403,9 +403,10 @@ app.layout = html.Div(children=[
     Input('crime-map','selectedData'),
     Input('time-graph', 'relayoutData'),
     Input('resetsave', 'children'), 
-    Input('hist-graph', 'clickData')]
+    Input('hist-graph', 'clickData')],
+    [State('workplease','children')]
 )
-def savingQuery(val, sel_data, relay_data, reset, click_data):
+def savingQuery(val, sel_data, relay_data, reset, click_data, worker):
     initialtxt = [''] * 3
     #print(dat)
     if (val != "All Crimes"):
@@ -434,6 +435,10 @@ def savingQuery(val, sel_data, relay_data, reset, click_data):
         t2 = t2[0:10]
         time_clause = " occurred_date_or >= '" + t1 + "' AND" + " occurred_date_or <= '" + t2 + "' "
         initialtxt[2] = time_clause
+    elif (worker is not None):
+        initialtxt[2] = worker
+    # elif(worker is not None):
+    #     initaltxt[2] = worker
     # elif (wrk != ''):
     #     initialtxt[2] = wrk
 
@@ -503,7 +508,7 @@ def pullQuery(qlist, ctxt, reset, p):
         time_fig.update_xaxes(
             rangeslider_visible=True,
         )
-
+        #time_fig.update_layout(uirevision = p)
 
 
         #time_fig.update_layout(uirevision = True)
@@ -626,7 +631,7 @@ def pullQuery(qlist, ctxt, reset, p):
         # else:
         #     time_fig.update_layout(uirevision = True)
         #time_fig.update_layout(uirevision = True)
-
+        #time_fig.update_layout(uirevision = p)
         map_df["latitude"] = pd.to_numeric(map_df["latitude"])
         map_df["longitude"] = pd.to_numeric(map_df["longitude"])
         map_fig = px.scatter_mapbox(map_df, lat=map_df.columns[1], lon=map_df.columns[2], hover_name = "summarized_offense", hover_data = ['occurred_date_or'], color_discrete_sequence = ["fuchsia"], zoom = 10, height = 800)   
